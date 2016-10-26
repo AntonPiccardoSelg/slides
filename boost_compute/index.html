@@ -1,0 +1,618 @@
+<!doctype html>
+<html lang="en">
+
+	<head>
+		<meta charset="utf-8">
+
+		<title>Boost Compute</title>
+
+		<meta name="apple-mobile-web-app-capable" content="yes" />
+		<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui">
+
+		<link rel="stylesheet" href="css/reveal.css">
+		<link rel="stylesheet" href="css/theme/black.css" id="theme">
+
+		<!-- Code syntax highlighting -->
+		<link rel="stylesheet" href="lib/css/zenburn.css">
+
+		<!-- Printing and PDF exports -->
+		<script>
+			var link = document.createElement( 'link' );
+			link.rel = 'stylesheet';
+			link.type = 'text/css';
+			link.href = window.location.search.match( /print-pdf/gi ) ? 'css/print/pdf.css' : 'css/print/paper.css';
+			document.getElementsByTagName( 'head' )[0].appendChild( link );
+		</script>
+
+		<!--[if lt IE 9]>
+		<script src="lib/js/html5shiv.js"></script>
+		<![endif]-->
+	</head>
+
+	<body>
+
+		<div class="reveal">
+
+			<!-- Any section element inside of this container is displayed as a slide -->
+			<div class="slides">
+			    <!-- ###################################################################
+				     ##################################################################-->
+				<section data-markdown>
+					#Boost Compute
+					#### Code Chat 04/11/2016
+					Anton Piccardo-Selg
+				</section>
+				<!-- ##################################################################
+				     ##################################################################-->
+				<!-- What is Boost Compute -->
+				<section name ="what_is">
+					<section>
+					<h2> What is Boost Compute?</h2>
+						<ul>
+						<li> GPU/parallel-computing library for C++ based on <b>OpenCL</b> </li>
+						<li> essentially thin C++ wrapper over the OpenCL API </li>
+						<li> Windows, Mac, Linux </li>
+						<li> Header only library </li>
+						<li> Added to Boost (1.61) in April 2016 </li>
+						</ul>
+					</section>
+					<section>
+						<img src="boost_compute_architecture.jpg" height="100%" width="100%" style="background:none; border:none; box-shadow:none;">
+					</section>
+				</section>
+				<!-- ##################################################################
+				     ##################################################################-->
+				<!-- Difference between GPU and CPU -->
+				<section name ="gpu_vs_cpu">
+					<section>
+					<h2> GPU  vs. CPU</h2>
+					<img src="cpu_vs_gpu.png" height="100%" width="100%" style="background:none; border:none; box-shadow:none;">
+					</section>
+					<section>
+					 <h2> GPU  Use Cases </h2>
+					</section>
+				</section>
+				<!-- ##################################################################
+				     ##################################################################-->
+				<!-- Difference between GPU and CPU -->
+				<section name ="last_chat">
+					<section>
+					<h2> What are your options?</h2>
+					</section>
+					<section>
+						<img src="elephant_cuda.jpg" height="100%" width="100%" style="background:none; border:none; box-shadow:none;">
+					
+					</section>
+
+				</section>
+				<!-- ##################################################################
+				     ##################################################################-->
+				<!-- Basic OpenCL -->
+				<section name ="oepn_cl_basics">
+				<section>
+					<h2>OpenCL Concepts</h2>
+					<ul>
+						<li> </li>
+					</ul>
+				</section>
+				<section>	
+				</section>
+				</section>
+				<!-- ##################################################################
+				     ##################################################################-->
+				<!-- Difference between GPU and CPU -->
+				<section name ="why_boost_compute">
+					<h2> Getting started</h2>
+
+				</section>
+
+
+				
+				
+				<!-- ###################################################################
+				     ##################################################################-->
+				<!-- C++11-->
+
+				<!-- ###################################################################
+				     ##################################################################-->
+				<!-- Strongly-typed enums-->
+				<section>
+					<section>
+					Item10: Prefer scoped <code>enums</code> to unscoped <code>enums</code>
+					</section>
+					<section>
+					<h2> Old-Style enums </h2>
+							<p align="left">Not scoped</p>
+							<pre><code class="cpp" data-trim contenteditable>
+// this code won't compile!
+enum Norm {VOLUME, NUMEVENT, AUTOSELECT}; 
+enum View {STANDARD, MULTISLICE, AUTOSELECT};
+							</code></pre>
+						<br>
+						<div class="fragment">
+							<p align="left">Implicitly conversion to integral types</p>
+							<pre><code class="cpp" data-trim contenteditable>
+// doesn't make sense, but is correct code
+auto view = ViewNS::View::MULTISLICE;
+if (view == NormNS::Norm::NUMEVENT) {...
+if (view > 1.4) {...
+							</code></pre>
+						</div>
+					</section>
+					<section>
+					<h2> Enum classes </h2>
+						<p align="left">Scoped</p>
+						<pre><code class="cpp" data-trim contenteditable>
+enum class Norm {VOLUME, NUMEVENT, AUTOSELECT};
+enum class View {STANDARD, MULTISLICE, AUTOSELECT};
+
+Norm norm = Norm::AUTOSELECT;
+View view = View::AUTOSELECT;
+						</code></pre>
+					<br>
+					<div class="fragment">
+						<p align="left">Strongly typed</p>
+						<pre><code class="cpp" data-trim contenteditable>
+auto view = ViewNS::View::MULTISLICE;
+if (view == NormNS::Norm::NUMEVENT) {... // won't compile
+
+if (view == ViewNS::View::STANDARD) {... // OK
+						</code></pre>
+					</div>
+					</section>
+					<section>
+						<p align="left">Control underlying type</p>
+						<pre><code class="cpp" data-trim contenteditable>
+enum Direction1 {LEFT = 'l', RIGHT ='r'};
+auto dir1 = LEFT;
+
+enum class Direction2 : char {LEFT = 'l', RIGHT ='r'};
+auto dir2 = Direction2::LEFT;
+
+std::cout &lt&lt sizeof(dir1) &lt&ltstd::endl; // on VS2012 prints 4 bytes
+std::cout &lt&lt sizeof(dir2) &lt&ltstd::endl; // on VS2012 prints 1 byte
+						</code></pre>
+						<br>
+						<div class="fragment">
+						<p align="left">Forward declaration</p>
+						<pre><code class="cpp" data-trim contenteditable>
+// in foo.h
+enum class View;
+void installView(View v);
+...
+// in foo.cpp
+enum class View {STANDARD, MULTISLICE, AUTOSELECT};
+						</code></pre>
+						</div>
+					</section>
+				</section>
+				<!-- ###################################################################
+				     ##################################################################-->
+				<!-- delete -->
+				<section>
+					<section>
+					<div align="left" style ="margin-left:-10%">Item11: Prefer <code>delete</code>d functions to <code>private</code> undefined ones</code></div>
+					</section>
+					<section>
+					<div align="left">Make objects uncopyable</div>
+<pre><code class="cpp" data-trim contenteditable>
+class MDWSHandler {
+...
+private:
+  MDWSHandler(const MDWSHandler&); // don't define
+  MDWSHandler& operator=(const MDWSHandler&); //don't define
+...
+}
+</code></pre>
+					<div class="fragment" style="font-size:80%">&#8594; class methods and friends still have access </div>
+					</section>
+					<section>
+					<div align="left">Mark unwanted method with <code>delete</code>:</div>
+					<pre><code class="cpp" data-trim contenteditable>
+class MDWSHandler {
+public:
+  MDWSHandler(const MDWorkspaceHandler&) = delete;
+  MDWSHandler& operator=(const MDWorkspaceHandler&) = delete;
+...
+}
+					</pre></code>
+					<div style="font-size:80%">&#8594; declared public! </div>
+					</section>
+					<section>
+					<div align= "left">Applies also to templates:</div>
+					<pre><code class="cpp" data-trim contenteditable>
+template&lttypename T&gt
+void plotMDWS(T ws);
+
+// Exclude workspaces
+template&lt&gt
+void plotMDWS&ltWorkspace2Dr_spt&gt(Workspace2D_sptr ws) = delete;
+
+template&lt&gt
+void plotMDWS&ltEventWorkspace_sptr&gt(EventWorkspace_sptr ws) = delete;
+					</code></pre>
+					<div class="fragment">
+					<div align="left">But might also have to: </div>
+					<div style ="margin-right: -20%" >
+					<pre><code class="cpp" data-trim contenteditable>
+template&lt&gt
+void plotMDWS&ltWorkspace2D_const_sptr&gt(Workspace2D_const_sptr ws) = delete;
+
+template&lt&gt
+void plotMDWS&ltEventWorkspacer_const_sptr&gt(EventWorkspace_const_sptr ws) = delete;
+					</code></pre>
+					</div>
+					</div>
+					<div class = "fragment" align="left">
+					Note that <code>delete</code> can also be applied free function.
+					Helpful to control overloading.
+					</div>
+					</section>
+				</section>
+			
+				<!-- ###################################################################
+				     ##################################################################-->
+				<!-- Special member function generation -->
+				<section id="special_member_function_generation">
+					<section>
+					<div>Item17: Understand special member function generation</div>
+					</section>
+					<section>
+					<p align="left"> Pre-C++11 special member functions:</p>
+						<ul align="left">
+							<li>default constructor</li>
+							<li>destructor</li>
+							<li>copy constructor(cc)</li>
+							<li>copy assignment operator(cao)</li>
+						</ul>
+					<br> <br>
+					<div align="left" class="fragment">
+					<p>&#8594; Only generated when needed.</p>
+					<p>&#8594; Only generated if no user-defined declaration exists.</p>
+					</div>
+					</section>
+					<section>
+					<p align="left"> New C++11 special member functions:</p>
+						<ul align="left">
+							<li>move constructor (mc)</li>
+							<li>move assignment operator (mao)</li>
+						</ul>
+					<pre><code class="cpp" data-trim contenteditable>
+Frame(Frame&& other);
+Frame& operator=(Frame&& other);
+					</code></pre>
+					<div align= "left" class="fragment">
+					<p>new set of rules:</p>
+						<ul align="left">
+							<li>Explicit definition of mc(mao) prevents automatic generation of cc/cao/mao(mc)</li>
+							<li>mao(ao) not generated automatically if cc/cao/destructor declared</li>
+						</ul>
+					</div>
+					</section>
+					<section>
+					<h3 align="left">Consequences:</h3>
+					<div align="left" class = "fragment">
+					Make non-copyable by accident:
+					<pre><code class="cpp" data-trim contenteditable>
+class Foo {
+public:
+Foo(Foo&& other){...} // Added move copy to legacy 
+...
+};
+...
+Foo f1, f2;
+...
+f1 = f2; // will not compile, since assignment is deleted
+					</code></pre>
+					<p align="left" style="font-size:80%">&#8594; Retro-fitting move operation might break code</p>
+					</div>
+					<div align="left" class = "fragment">
+					Base classes in polymorphism:
+					<pre><code class="cpp" data-trim contenteditable>
+class Foo {
+public:
+virtual ~Foo(){}
+};
+					</code></pre>
+					<p align="left" style="font-size:80%">&#8594; Destructor deletes move operations on Foo</p>
+					</div>
+					</section>
+					<section>
+					<h3 align="left">"Solution":</h3>
+					<pre><code class="cpp" data-trim contenteditable>
+class Foo {
+public:
+virtual ~Foo() = default;
+
+Foo(Foo&&) = default;
+Foo& operator=(Foo&&) = default;
+
+Foo(const Foo&) = default;
+Foo& operator=(const Foo&) = default;
+};
+					</code></pre>
+					<div class="fragment">
+					<p align="left" style="font-size:80%">&#8594; makes intentions clearer</p>
+					<p align="left" style="font-size:80%">&#8594; future-proof since some rules for copy operations are deprecated!</p>
+					</div>
+					</section>
+				</section>
+
+				<!-- ###################################################################
+				     ##################################################################-->
+				<!-- override + final-->
+				<section id="override_final">
+					<section>
+					<div>Item12: Declare overriding functions <code>override</code></div>
+					</section>
+					<section>
+					<div align="left">override - overload issue</div>
+					<pre><code class="cpp" data-trim contenteditable>
+class A {
+public:
+virtual void doSomething(int in) const;
+...
+};
+
+class B: public A{
+public:
+void doSomething(int in); // overloaded, not overriden
+...
+};
+...
+shared_ptr&ltA&gt a = make_shared&ltB&gt();
+size_t c = 1;
+a->doSomething(c); // A's implementation is called
+						</code></pre>
+					</section>
+					<section>
+						<p align="left">Mark explicitly which <b>virtual</b> method should be overridden</p>
+						<pre><code class="cpp" data-trim contenteditable>
+class A {
+public:
+virtual void f1() const;
+virtual void f2(int x)
+void f3();
+};
+
+class B: public A{
+public:
+void f1() override; // Error: wrong constness 
+
+void f2(unsigned int x) override; //Error: wrong argument type
+
+void f3() override; // Error: not virtual
+};
+					</code></pre>
+				</section>
+				<section>
+					<p align="left"><code>final</code> <p>
+					<pre><code class="cpp" data-trim contenteditable>
+class B : public A {
+public:
+virtual void doSomething() final;
+};
+class C: public B {
+public:
+virtual void doSomething(); // Error
+}
+					</code></pre>
+					<div style="font-size:80%">&#8594; for <code>virtual</code> methods that should not be overriden.</div>
+					<br>
+					<div class="fragment">
+					<pre><code class="cpp" data-trim contenteditable>
+class A final {
+...
+
+class B : public A { // Error
+...
+					</code></pre>
+					<div style="font-size:80%">&#8594; Nothing can inherit from the class.</div>
+					</div>
+				</section>
+				</section>
+				<!-- ###################################################################
+				     ##################################################################-->
+				<!-- algorithms -->
+				<section>
+					<section>
+					<div>Item xxx: Think about using <code>&ltalgorithm&gt</code></div>
+					</section>
+					<section>
+					<p align="left">Python we can use a lot of convenience methods:</p>
+					<pre><code class="py" data-trim contenteditable>
+all([True, True, True, False, True, True]) # equates to False
+
+any([True, True, True, False, True, True]) # equates to True
+					</code></pre>
+					<br>
+					<div class="fragment">
+					<p align="left">C++ has this now too: <code>all_of, any_of, none_of</code></p>
+					<pre><code class="cpp" data-trim contenteditable>
+template &ltclass InputIterator, class UnaryPredicate&gt
+bool xxx_of (InputIterator first, InputIterator last,
+             UnaryPredicate pred);
+					</code></pre>
+					</div>
+					<div class="fragment">
+					<pre><code class="cpp" data-trim contenteditable>
+...
+std::vector&ltMDFrame&gt frames = getAllFrames();
+auto hasQ = all_of(frames.begin(), frames.end(),
+                   [](const MDFrame frame) { return frame.isQ();}
+if (hasQ) {
+  // do Q related stuff
+...
+					</code></pre>
+					</div>
+					</section>
+				</section>
+				
+				<!-- ###################################################################
+				     ##################################################################-->
+				<!-- constexpr -->
+				<section>
+					<section>
+					<div>Item15: Use <code>constexpr</code> whenever possible</div>
+					</section>
+					<section>
+					<p align="left"><code>constexpr</code> objects: <code>const</code> and known at compile time</p>
+					<div class="fragment">
+					<pre><code class="cpp" data-trim contenteditable>
+constexpr int var1 = 5;
+std::array&ltint, var1&gt arr;
+					</code></pre>
+					</div>
+					<div class="fragment">
+					<p align="left" style="font-size:80%"><code>const</code> is not <code>constexpr</code> </p>
+					<pre><code class="cpp" data-trim contenteditable>
+...
+int doSomething() {...} 
+...
+const int var1 = doSomething(); // is set at runtime
+constexpr int var2 = doSomething(); // Error 
+					</code></pre>
+					</div>
+					<div class="fragment">
+					<pre><code class="cpp" data-trim contenteditable>
+int var1 = 5;
+const int var2 = var1; // fine
+std::array&ltint, var2&gt arr; // error
+
+constexpr int var3 = var1; // error
+
+					</code></pre>
+					</div>
+					<div class="fragment">
+					<pre><code class="cpp" data-trim contenteditable>
+constexpr var1 = 2;
+constexpr var2 = var1;
+std::array&ltint, var2&gt arr; // fine
+					</code></pre>
+					</div>
+					</section>
+					<section>
+					<p align="left"><code>constexpr</code> functions:</p>
+					<pre><code class="cpp" data-trim contenteditable>
+constexpr int doSomething(int input) {
+  return 10*input;
+}
+
+int in1 = 5;
+int out1 = doSomething(in1); // evaluated at runtime
+
+constexpr in2 =5;
+constexpr out2 = doSomething(in2); // evaluated at compile time
+					</code></pre>
+					<div class="fragment">
+					<p align="left" style="font-size:80%">Restrictive rules:</p>
+					<div align="left" style="font-size:80%">
+					<ul><ul>
+						<li>Single return statement</li>
+						<li>No <code>if</code> and <code>for</code> in C++11 &#8594; ternary operator and recursion.</li>
+					</ul></ul>
+					</div>
+					</div>
+					<div class="fragment">
+					<pre><code class="cpp" data-trim contenteditable>
+// Get val^n at compile time
+constexpr customPower(float val, int n) {
+  return n==0 ? 1 : val*customPower(val,n-1);
+}
+
+constexpr out = customPower(2,4);
+					</code></pre>
+					</div>
+					</section>
+					<section>
+					<p align="left">Using objects at compile time</p>
+					<pre style ="width: 100%"  style ="height:100%"><code class="cpp" data-trim contenteditable style="max-height:600px">
+					
+constexpr getPi() {
+  return 3.1415926;
+}
+
+class Circle
+{
+public:
+constexpr Circle (int x, int y, int radius) : m_x( x ), m_y( y ), 
+                                              m_radius( radius ) {}
+constexpr double getArea () {
+return m_radius * m_radius * getPi();
+}
+private:
+  int m_x;
+  int m_y;
+  int m_radius;
+};
+...
+constexpr Circle circle( 0, 0, 10 );
+constexpr double area = circle.getArea();
+...
+					</code></pre>
+
+					</section>
+				</section>
+				<!-- ###################################################################
+				     ##################################################################-->
+				<!-- End -->
+				<section>
+				<h3>End</h3>
+				</section>
+				<!-- ###################################################################
+				     ##################################################################-->
+				<!-- Editor -->
+				<section>
+				<h3>Scratchpad</h3>
+					<pre><code class="cpp" data-trim contenteditable>
+class Foo {
+public:
+
+
+
+
+
+
+
+
+
+
+}
+					</code></pre>
+				</section>
+				<!-- ###################################################################
+					  END OF SECTIONS
+				     ##################################################################-->
+			</div>
+		</div>
+		<script src="lib/js/head.min.js"></script>
+		<script src="js/reveal.js"></script>
+		<script>
+
+			// Full list of configuration options available at:
+			// https://github.com/hakimel/reveal.js#configuration
+			Reveal.initialize({
+				controls: true,
+				progress: true,
+				history: true,
+				center: true,
+
+				transition: 'convex', // none/fade/slide/convex/concave/zoom
+
+				// Optional reveal.js plugins
+				dependencies: [
+					{ src: 'lib/js/classList.js', condition: function() { return !document.body.classList; } },
+					{ src: 'plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+					{ src: 'plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+					{ src: 'plugin/highlight/highlight.js', async: true, condition: function() { return !!document.querySelector( 'pre code' ); }, callback: function() { hljs.initHighlightingOnLoad(); } },
+					{ src: 'plugin/zoom-js/zoom.js', async: true },
+					{ src: 'plugin/notes/notes.js', async: true }
+				]
+			});
+
+		</script>
+
+	</body>
+</html>
