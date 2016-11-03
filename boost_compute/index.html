@@ -60,10 +60,13 @@
 					</section>
 					<section>
 						<img src="boost_compute_architecture.jpg" height="100%" width="100%" style="background:none; border:none; box-shadow:none;">
-						<p align="left"  style="font-size:20px">src: <a hrf"www.iwocl.org/wp-content/uploads/iwocl-2016-boost-compute.pdf">IWOCL talk by Jakub Szuppe</a></p>
+						<font size="5">
+						<div style="text-align:left">
+							Source: <a href="http://www.iwocl.org/wp-content/uploads/iwocl-2016-boost-compute.pdf"> IWOCL Talk Jakub Szuppe </a>
+						</div>
+						</font>
 					</section>
 				</section>
-
 				<!-- ##################################################################
 				     ##################################################################-->
 				<!-- Basic OpenCL -->
@@ -73,7 +76,12 @@
 				</section>
 				<section>
 					<h5>OpenCL Class Diagram </h5>
-					<img src="open_cl_class_diagram.jpg" height="70%" width="70%" style="background:none; border:none; box-shadow:none;">
+					<img src="open_cl_class_diagram.jpg" height="60%" width="60%" style="background:none; border:none; box-shadow:none;">
+					<font size="5">
+					<div style="text-align:left">
+						Source: <a href="https://www.khronos.org/files/opencl20-quick-reference-card.pdf"> Khronos OpenCL 2.0 Quick Reference Card </a>
+					</div>
+					</font>
 				</section>
 				<section style="width:110%">
 					<font size="6">
@@ -83,25 +91,30 @@
 						<li> Example: Intel(R) OpenCL, Experimental OpenCL 2.1 CPU Only Platform</li>
 					</ul>
 				</font>
+				<div class="fragment">
 				<font size="6">
-					<div class="fragment">
-					<p style="text-align:left">Device: </p>
-					<img src="memory_model.png" height="55%" width="55%" style="background:none; border:none; box-shadow:none;">
-					</div>
+				<p style="text-align:left">Device: </p>
+				<img src="memory_model.png" height="50%" width="50%" style="background:none; border:none; box-shadow:none;">
 				</font>
+				<font size="5">
+				<div style="text-align:left">
+					Source: <a href="https://www.khronos.org/files/opencl20-quick-reference-card.pdf"> Khronos OpenCL 2.0 Quick Reference Card </a>
+				</div>
+				</font>
+				</div>
 				</section>
 				<section>
 					<font size="6">
 					<p style="text-align:left">Context: </p>
 					<ul>
 						<li> Host-device interaction </li>
-						<li> Management of memory objects and keeping track of Kernels</li>
+						<li> Management of memory objects and keeping track of kernels</li>
 					</ul>
 					<div class="fragment">
 					<p style="text-align:left">Command Queue: </p>
 					<ul>
 						<li> Communciation with compute device</li>
-						<li> Data transfer and Kernel execution sdfsfsdfsdfsdfsdfdsf</li>
+						<li> Data transfer and kernel execution</li>
 					</ul>
 					</div>
 					<!--
@@ -136,21 +149,12 @@ __kernel void add(__global float* a, __gloabl float* b, __global float* c) {
 <pre style="width:100%"><code class="cpp" data-trim contenteditable >
 ...
 result = clBuildProgram(program, 0, NULL, NULL, NULL, NULL);
-if (r != CL_SUCCESS) {
-cl_device_id device_id [16];
-clGetContextInfo(context, CL_CONTEXT_DEVICES, sizeof(device_id),
-                 &device_id, NULL);
-clGetProgramBuildInfo(program, device_id [0], CL_PROGRAM_BUILD_LOG,
-                      sizeof(buffer) - 1, buffer, &size);
+if (result != CL_SUCCESS) {
 ...
 }
 </code></pre>
-
-
-
-
 				</section>
-				</section>
+			</section>
 				<!-- ##################################################################
 				     ##################################################################-->
 				<!-- How to integrate boost into your project -->
@@ -162,7 +166,7 @@ clGetProgramBuildInfo(program, device_id [0], CL_PROGRAM_BUILD_LOG,
 				 	<ol>
 						<li> Get the OpenCL implementation for your devices, ie from Intel, AMD, ...
 							<ul>
-								<li>You should have a  <code>cl.hpp</code> and a corresponding OpenCL library.</li>
+								<li>You should have a <code>cl.hpp</code>/<code>cl.h</code> and a corresponding OpenCL library.</li>
 							</ul>
 						</li>
 					<div class="fragment">
@@ -319,14 +323,170 @@ auto all_elements_smaller2 =
 				<!-- ###################################################################
 						 ##################################################################-->
 				<section name ="low_level_algorithms">
+					<section>
 					<h2> Low-level approach</h2>
+					</section>
+					<section>
+						<font size="6">
+						<p style="text-align:left">Example: Matrix Multiplication</p>
+						</font>
+<pre style="width:100%;"><code class="cpp" data-trim contenteditable>
+...
+for(size_t row = 0; row < rows; ++row) {
+  for(size_t column = 0; j < columns; ++column) {
+    for(size_t inner = 0;  < inner_dim; ++inner) {
+      mult[row][column] += a[row][inner] * b[inner][column];
+    }
+  }
+}
+...
+</code></pre>
+<font size="6" >
+						<div class="fragment" style="text-align:left">
+						<ul>
+							<li> Define kernel for matrix multiplication</li>
+							<li> Setup a OpenCL environment </li>
+							<li> Build program object </li>
+							<li> Execute the matrix multiplication kernel</li>
+						</font>
+					</div>
+					</section>
+					<section>
+						<font size="6">
+						<p style="text-align:left">Define Kernel</p>
+						</font>
+<pre style="width:110%;"><code class="cpp" data-trim contenteditable>
+const char matrix_multiplication_source[] = BOOST_COMPUTE_STRINGIZE_SOURCE(
+__kernel void matrix_mult(__global const float *a, __global const float* b,
+                          __global float* c, int rows,  int columns,  int inners)
+{
+  const uint row = get_global_id(0);
+  const uint column = get_global_id(1);
 
+  const uint current_index_c = row*columns + column;
+  const uint current_index_a_offset = row*rows;
+
+  float value = 0;
+  for (size_t index = 0; index < inners; ++index) {
+    value += a[current_index_a_offset + index]*b[column*index + row];
+  }
+  c[current_index_c] = value;
+}
+);
+</code></pre>
+					<font size="6">
+					<div class="fragment" style="text-align:left">
+					  <ul >
+						 <li>Can use OpenCL program caching</li>
+						 <li>Requires Boost.Filesystem </li>
+						 <li><code> BOOST_COMPUTE_USE_OFFLINE_CACHE </code> </li>
+					  </ul>
+				  </div>
+				  </font>
+					</section>
+					<section>
+					<font size="6">
+					<p style="text-align:left">Setup</p>
+					<ul>
+						<li>Create device, context and command queue as previously</li>
+						<li>Copy the data to a device vector</li>
+						<li>Asynchronous</li>
+					</ul>
+				  </font>
+<pre style="width:100%"><code class="cpp" data-trim contenteditable >
+...
+// Create device
+auto device = compute::system::default_device();
+auto context = compute::context(device);
+compute::command_queue command_queue(context, device);
+
+// Transfer data from host to device
+compute::vector&ltfloat&gt device_a(number_of_elements_a, context);
+compute::vector&ltfloat&gt device_b(number_of_elements_b, context);
+compute::vector&ltfloat&gt device_c(number_of_elements_c, context);
+auto copy_a = boost::compute::copy_async(host_a.begin(), host_a.end(),
+                                         device_a.begin(), command_queue);
+auto copy_b = boost::compute::copy_async(host_b.begin(), host_b.end(),
+                                         device_b.begin(), command_queue);
+</code></pre>
+					</section>
+					<section>
+						<font size="6">
+						<p style="text-align:left">Build program</p>
+						<ul>
+							<li>Build program and get the kernel</li>
+							<li>Set the kernel arguments and the range</li>
+						</ul>
+						</font>
+<pre style="width:110%"><code class="cpp" data-trim contenteditable >
+// Compile the program
+auto matrix_mult_program = compute::program::create_with_source(
+                                        matrix_multiplication_source, context);
+matrix_mult_program.build();
+compute::kernel matrix_mult_kernel(matrix_mult_program, "matrix_mult");
+
+// Wait until the input data has been copied
+copy_a.wait();
+copy_b.wait();
+
+// Set the kernel argument and run it
+matrix_mult_kernel.set_args(device_a.get_buffer(), device_b.get_buffer(),
+                            device_c.get_buffer(), rows, columns, inner_dim);
+</code></pre>
+				</section>
+				<section>
+					<font size="6">
+					<p style="text-align:left">Execute the kernel</p>
+					<ul>
+						<li>Enque the Kernel </li>
+						<li>Set the work size</li>
+					</ul>
+					</font>
+<pre style="width:110%"><code class="cpp" data-trim contenteditable >
+// Run computation on GPU
+command_queue.enqueue_nd_range_kernel(matrix_mult_kernel,
+                                compute::dim(0, 0) /*global work offst*/,
+                                compute::dim(rows, columns) /*global work size*/,
+                                compute::dim(1, 1) /*local work size*/);
+// Get the output back to the host
+compute::copy(device_c.begin(), device_c.end(), host_c.begin(), command_queue);
+...
+</code></pre>
+				</section>
 				</section>
 				<!-- ###################################################################
-						 ##################################################################-->
-				<section name ="performance">
-					<h2> Performance</h2>
-
+				     ##################################################################-->
+				<!-- Performance -->
+				<section>
+				<section>
+					<h3>Performance</h3>
+				</section>
+				<section>
+					<font size="8">
+					<div style="text-align:left">
+						Sort
+					</div>
+					</font>
+					<img src="boost_compute_performance.png" height="100%" width="100%" style="background:none; border:none; box-shadow:none;">
+					<font size="5">
+					<div style="text-align:left">
+						Source: <a href="http://www.iwocl.org/wp-content/uploads/iwocl-2016-boost-compute.pdf"> IWOCL Talk Jakub Szuppe </a>
+					</div>
+					</font>
+				</section>
+				<section>
+					<font size="8">
+					<div style="text-align:left">
+						But ...
+					</div>
+					</font>
+					<img src="boost_compute_performance2.png" height="100%" width="100%" style="background:none; border:none; box-shadow:none;">
+					<font size="5">
+					<div style="text-align:left">
+						Source: <a href="https://arxiv.org/abs/1601.03144v1"> A Performance Comparison of Sort and Scan Libraries for GPUs -- B. Merry</a>
+					</div>
+					</font>
+				</section>
 				</section>
 				<!-- ###################################################################
 				     ##################################################################-->
