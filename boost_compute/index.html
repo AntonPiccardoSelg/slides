@@ -136,6 +136,12 @@
 				<section>
 					<font size="6">
 					<p style="text-align:left">Simple Kernel for addition: </p>
+					<ul>
+						<li> OpenCL C </li>
+						<li> Part of OpenCL program</li>
+						<li> Runtime compilation </li>
+						<li> Stored as character arrays, binary or Intermediate Language </li>
+					</ul>
 					</font>
 					<pre style="width:100%"><code class="cpp" data-trim contenteditable >
 __kernel void add(__global float* a, __gloabl float* b, __global float* c) {
@@ -143,6 +149,7 @@ __kernel void add(__global float* a, __gloabl float* b, __global float* c) {
   c[i] = a[i] + b[i];
 }
 					</code></pre>
+					<div class="fragment">
 					<font size="6">
 					<p style="text-align:left">OpenCL C API Example: </p>
 					</font>
@@ -153,6 +160,7 @@ if (result != CL_SUCCESS) {
 ...
 }
 </code></pre>
+				</div>
 				</section>
 			</section>
 				<!-- ##################################################################
@@ -437,7 +445,7 @@ matrix_mult_kernel.set_args(device_a.get_buffer(), device_b.get_buffer(),
 				<section>
 					<font size="6">
 					<p style="text-align:left">Execute the kernel</p>
-					<ul>
+					<ul "text-align:left">
 						<li>Enque the Kernel </li>
 						<li>Set the work size</li>
 					</ul>
