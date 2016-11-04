@@ -139,8 +139,8 @@
 					<ul>
 						<li> OpenCL C </li>
 						<li> Part of OpenCL program</li>
-						<li> Runtime compilation </li>
 						<li> Stored as character arrays, binary or Intermediate Language </li>
+						<li> Runtime compilation </li>
 					</ul>
 					</font>
 					<pre style="width:100%"><code class="cpp" data-trim contenteditable >
@@ -343,7 +343,7 @@ auto all_elements_smaller2 =
 for(size_t row = 0; row < rows; ++row) {
   for(size_t column = 0; j < columns; ++column) {
     for(size_t inner = 0;  < inner_dim; ++inner) {
-      mult[row][column] += a[row][inner] * b[inner][column];
+      c[row][column] += a[row][inner] * b[inner][column];
     }
   }
 }
