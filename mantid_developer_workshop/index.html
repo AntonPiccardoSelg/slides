@@ -1,0 +1,499 @@
+<!doctype html>
+<html lang="en">
+
+	<head>
+		<meta charset="utf-8">
+
+		<title>Introduction to the DataProcessorWidget in Python</title>
+
+		<meta name="apple-mobile-web-app-capable" content="yes" />
+		<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui">
+
+		<link rel="stylesheet" href="css/reveal.css">
+		<link rel="stylesheet" href="css/theme/black.css" id="theme">
+
+		<!-- Code syntax highlighting -->
+		<link rel="stylesheet" href="lib/css/zenburn.css">
+
+		<!-- Printing and PDF exports -->
+		<script>
+			var link = document.createElement( 'link' );
+			link.rel = 'stylesheet';
+			link.type = 'text/css';
+			link.href = window.location.search.match( /print-pdf/gi ) ? 'css/print/pdf.css' : 'css/print/paper.css';
+			document.getElementsByTagName( 'head' )[0].appendChild( link );
+		</script>
+
+		<!--[if lt IE 9]>
+		<script src="lib/js/html5shiv.js"></script>
+		<![endif]-->
+	</head>
+	<body>
+
+		<div class="reveal">
+
+			<!-- Any section element inside of this container is displayed as a slide -->
+			<div class="slides">
+
+<!-- ###########################################################################
+		 ########################################################################-->
+				<section data-markdown>
+					##Introduction to Mantid's DataProcessorWidget in Python
+					#### Mantid Developer Workshop 15/6/2017
+					Anton Piccardo-Selg
+				</section>
+
+
+<!-- ###########################################################################
+		 ########################################################################-->
+				<!-- Disclaimer -->
+				<section>
+					<h3>Disclaimer</h3>
+					<ul style="font-size:30px">
+						<li>All credit for this work goes to Raquel Alvarez Banos!!!</li>
+						<li>All information here has been taken from Raquel's developer documentation and examples</li>
+						<li>Flexible solution for a lot of Mantid's standard scenarios. Might need customization for you particular case</li>
+						<li><a href="https://github.com/mantidproject/mantid/pull/19430">PR 19430</a> for the DataProcessorWidget</li>
+						<li><a href="https://github.com/mantidproject/mantid/pull/19581">PR 19581</a> for the asynchronous execution (&#64;PranavBahuguna)</li>
+					</ul>
+				</section>
+
+
+<!-- ###########################################################################
+		 ########################################################################-->
+				<!-- Outlook -->
+				<section>
+					<h3>Outlook</h3>
+						<ul style="font-size:30px">
+							<li>What is the DataProcessorWiget?</li>
+							<li>What are the components and how to set it up</li>
+							<li>Hands-on/demo (branch is <i>data_processor_gui_developer_workshop</i>)</li>
+						</ul>
+				</section>
+
+<!-- ###########################################################################
+		 ########################################################################-->
+				<!-- DataProcessorWidget overview -->
+				<section name ="data_processor_widget_overview">
+					<section>
+						<h3>What is the DataProcessorWiget?</h3>
+					</section>
+					<section>
+						<ul style="font-size:30px">
+							<li>Detailed information can be found in the <a href="https://github.com/mantidproject/documents/tree/master/Design/DataProcessorAlgorithmUI">design document</a></li>
+							<li>Provides an technique-independent interface and framework for batch processing worflows which adhere to:
+								<ul>
+									<li>Pre-processing</li>
+									<li>Processing</li>
+									<li>Post-procesing</li>
+								</ul>
+							</li>
+							<li>The widget consists of:
+								<ul>
+									<li>Table</li>
+									<li>Editing options</li>
+									<li>Progress bar</li>
+									<li>Notebook export</li>
+									<li>...</li>
+								</ul>
+							</li>
+						</ul>
+					</section>
+					<section>
+						<img src="data-processor-widget.png"  height="300" width="806">
+				  </section>
+					<section>
+						<img src="DataProcessorWidget.jpg" height="601" width="1105">
+					</section>
+				</section>
+
+<!-- ###########################################################################
+		 ########################################################################-->
+				<!-- How to setup the DataProcesorWidget-->
+				<section>
+					<h3>What are the components and how to set it up?</h3>
+					<ul style="font-size:30px">
+						<li>Whitelists</li>
+						<li>Pre-processing algorithm (optional)</li>
+						<li>Processing algorithm</li>
+						<li>Post-processing algorithm (optional)</li>
+						<li>Setting up the Widget in Python</li>
+					</ul>
+				</section>
+
+<!-- ###########################################################################
+		 ########################################################################-->
+				<!-- Whitelist-->
+				<section name ="data_processor_widget_overview">
+					<section>
+						<h3>Whitelist</h3>
+					</section>
+
+					<section>
+						<ul style="font-size:30px">
+							<li>Columns in the table link to algorithm properties.</li>
+							<li>Whitelist defines number of columns, their names, and the algorithm property names linked to them.</li>
+							<li>Interfaces the algorithm properties that we want the user to see.</li>
+							<li>In addition we always have the Options column</li>
+							<li>Descriptions can be viewed via the "What's this?" feature</li>
+						</ul>
+						<img src="column_description.png" height="244" width="487">
+					</section>
+					<section>
+<pre><code class="python" data-trim contenteditable style="width:130%; min-height:100px; margin-left:-15%">
+...
+whitelist = MantidQt.MantidWidgets.DataProcessorWhiteList()
+whitelist.addElement('Runs', 'InputWorkspace', 'The run to reduce')
+whitelist.addElement('Angle', 'ThetaIn', 'The incident angle')
+whitelist.addElement('Transmission Runs', 'FirstTransmissionRun', 'Transmission runs')
+whitelist.addElement('Q min', 'MomentumTransferMin', 'Q min')
+whitelist.addElement('Q max', 'MomentumTransferMax', 'Q max')
+whitelist.addElement('dQ/Q', 'MomentumTransferStep', 'Resolution')
+whitelist.addElement('Scale', 'ScaleFactor', 'Scale Factor')
+...
+</code></pre>
+						<div style="margin-left:-50%;font-size:30px" >
+							<ol>
+								<li>Name of the column.</li>
+								<li>Name of the algorithm property.</li>
+								<li>Description of the column.</li>
+							</ol>
+						</div>
+					</section>
+				</section>
+
+
+<!-- ###########################################################################
+		 ########################################################################-->
+				<!-- Pre-processing-->
+				<section name ="pre_preocessing">
+					<section>
+						<h3>Pre-Processing</h3>
+					</section>
+					<section>
+						<ul style="font-size:30px">
+							<li> Allows input to be combined (in a limited way). </li>
+							<li> Pre-processor algorithm requires <strong>two</strong> <i>InputWorkspace</i> properties and <strong>one</strong> <i>OutputWorkspace</i> property. </li>
+							<li> Runs that need to be pre-processed must be specified as a list separated by <i>+</i> or <i>,</i> </li>
+						</ul>
+						<img src="pre-processing.png"  height="235" width="841">
+					</section>
+					<section>
+						<div style="margin-left:-40%;font-size:30px">
+							Defining a pre-process map in Python:
+						</div>
+<pre><code class="python" data-trim contenteditable style="width:110%; min-height:100px; margin-left:-5%">
+...
+preprocess_map = MantidQt.MantidWidgets.DataProcessorPreprocessMap()
+preprocess_map.addElement('Runs', 'Plus')
+preprocess_map.addElement('Transmission Runs',
+                          'CreateTransmissionWorkspaceAuto')
+...
+</code></pre>
+						<div style="margin-left:-0%;font-size:30px">
+		          <ul>
+								<li>Combine elements in the <i>Runs</i> column by the <i>Plus</i> algorithm.</li>
+								<li>Combine elements in the <i>Transmission Runs</i> column by the <i>CreateTransmissionWorkspaceAuto</i> algorithm.</li>
+								<li>If only a single run is specified then nothing is preprocessed.</li>
+							</ul>
+						</div>
+					</section>
+					<section>
+						<h5> Naming quirks </h5>
+						<div style="margin-left:-0%;font-size:30px">
+							<ul>
+								<li>Names the workspace by the run number, e.g. <i>INTER00013460</i> will be <i>13460</i>.</li>
+								<li>Combined workspaces are concatenated by a "_", e.g. <i>13463_13464</i>.</li>
+								<li>Can specify prefixes as third argument.</li>
+								<li>Optimized to look for workspace with expected name in ADS.</li>
+							</ul>
+						</div>
+<pre><code class="python" data-trim contenteditable style="width:105%; min-height:100px; margin-left:-5%">
+...
+preprocess_map = MantidQt.MantidWidgets.DataProcessorPreprocessMap()
+preprocess_map.addElement('Runs', 'Plus', "TOF_")
+...
+</code></pre>
+					</section>
+				</section>
+
+
+<!-- ###########################################################################
+		 ########################################################################-->
+				<!-- Processing-->
+				<section name ="processing">
+					<section>
+						<h3>Processing</h3>
+					</section>
+					<section>
+<pre><code class="python" data-trim contenteditable style="width:110%; min-height:100px; margin-left:-5%">
+...
+from MantidQt.MantidWidgets import DataProcessorProcessingAlgorithm
+...
+ alg = DataProcessorProcessingAlgorithm('ReflectometryReductionOneAuto',
+                                        'IvsQ_binned_, IvsQ_, IvsLam_')
+...
+</code></pre>
+						<div style="margin-left:0%;font-size:30px">
+							<ul>
+								<li> Main input is a DataProcessorAlgorithm </li>
+								<li> At least one input workspace property. </li>
+								<li> At least one output workspace property. </li>
+								<li> One prefix per output workspace property </li>
+								<li> Can also provide a blacklist </li>
+							</ul>
+						</div>
+					</section>
+					<section>
+						<h5> Blacklist </h5>
+						<ul style="font-size:30px">
+							<li> Defines algorithm properties which should not be available through the <i>Options</i> column. </li>
+							<li> Should be used for input and output properties and properties that are linked to a table.</li>
+							<li> Can be useful for properties which users do not need to know about and are set programatically.</li>
+						</ul>
+<pre><code class="python" data-trim contenteditable style="width:110%; min-height:100px; margin-left:-5%">
+...
+from MantidQt.MantidWidgets import DataProcessorProcessingAlgorithm
+...
+ alg = DataProcessorProcessingAlgorithm('ReflectometryReductionOneAuto',
+                                        'IvsQ_binned_, IvsQ_, IvsLam_',
+                                        'InputWorkspace, OutputWorspace')
+...
+</code></pre>
+					</section>
+				</section>
+
+<!-- ###########################################################################
+		 ########################################################################-->
+				<!-- Post-processing-->
+				<section name ="post_processing">
+					<section>
+						<h3>Post-processing</h3>
+					</section>
+					<section>
+						<ul style="font-size:30px">
+							<li> Defines how a group of runs should be post-processed, e.g. a group of runs might have to be stitched together. </li>
+							<li> Groups could be measurements under the same conditions. </li>
+							<li> With a specified post-processing algorihtm, the table is displayed as a two-level tree. </li>
+						</ul>
+						<img src="table-with-post-processing.png"  height="301" width="1221">
+					</section>
+					<section>
+<pre><code class="python" data-trim contenteditable style="width:115%; min-height:100px; margin-left:-0%">
+...
+from MantidQt.MantidWidgets import DataProcessorPostprocessingAlgorithm
+...
+post_alg = DataProcessorPostprocessingAlgorithm('Stitch1DMany', 'stitched_')
+...
+</code></pre>
+						<ul style="font-size:30px">
+							<li> First entry is post-processing algorithm </li>
+							<li> Second entry is the final output prefix </li>
+						</ul>
+					</section>
+					<section>
+						<h5>Naming quirks revisited</h5>
+<pre><code class="python" data-trim contenteditable style="width:130%; min-height:100px; margin-left:-15%">
+alg = DataProcessorProcessingAlgorithm('ReflectometryReductionOneAuto',
+                                      'IvsQ_binned_, IvsQ_, IvsLam_','')
+...
+whitelist.addElement('Q min', 'MomentumTransferMin', 'Q min', True, 'q_')
+whitelist.addElement('Q max', 'MomentumTransferMax', 'Q max', True, '')
+...
+</code></pre>
+<img src="output-ws-names.png"  height="301" width="1221">
+
+						<div style="font-size:30px" > Name of the first output workspace: <i>IvsQ_binned_13460_q_0.01_0.3</i> </div>
+					</section>
+					<section>
+						<h5>Naming quirks revisited 2</h5>
+<pre><code class="python" data-trim contenteditable style="width:130%; min-height:100px; margin-left:-15%">
+post_alg = DataProcessorPostprocessingAlgorithm('Stitch1DMany', 'stitched_',
+                                                'InputWorkspaces, OutputWorkspaces')
+</code></pre>
+						<ul style="font-size:30px">
+							<li> Name of the first output workspace: <i>`stitched_13460_q_0.01_0.06_13462_q_0.035_0.3`</i></li>
+							<li> Note that the processing algorithm prefix has been removed </li>
+						</ul>
+					</section>
+				</section>
+
+
+<!-- ###########################################################################
+		 ########################################################################-->
+				<!-- Setting up the Widget in Python-->
+				<section name ="set_up_widget">
+					<section>
+						<h3>Setting up the Widget in Python</h3>
+					</section>
+					<section>
+						<p> Create the widget </p>
+<pre><code class="python" style="width:120%; min-height:500px; margin-left:-5%" data-trim contenteditable>
+...
+from MantidQt.MantidWidgets import (QDataProcessorWidget,
+                                    DataProcessorWhiteList,
+                                    DataProcessorPreprocessMap,
+                                    DataProcessorProcessingAlgorithm,
+                                    DataProcessorPostprocessingAlgorithm)
+...
+whitelist = DataProcessorWhiteList()
+...
+preprocess_map = DataProcessorPreprocessMap()
+...
+alg = DataProcessorProcessingAlgorithm(...
+...
+post_alg = DataProcessorPostprocessingAlgorithm(...
+...
+data_processor_table = QDataProcessorWidget(whitelist, preprocess_map, alg,
+                                            post_alg, self)
+...
+</code></pre>
+						<ul align="left" style="font-size:30px">
+							<li> Note that <code>self</code> is the main window.</li>
+						</ul>
+						<div ></div>
+					</section>
+					<section>
+						<p> Add main presenter </p>
+
+<pre><code class="python" style="width:120%; min-height:100; margin-left:-5%" data-trim contenteditable>
+...
+class MainPresenter(MantidQt.MantidWidgets.DataProcessorMainPresenter):
+...
+class MainWindow(...
+  self.data_processor_table = QDataProcessorWidget(whitelist, preprocess_map,
+                                                 alg, post_alg, self)
+  self.main_presenter = MainPresenter(self)
+  self.data_processor_table.accept(self.main_presenter)
+...
+</code></pre>
+						<div align="left" style="font-size:30px"> The rest is wiring up. </div>
+					</section>
+				</section>
+
+
+<!-- ###########################################################################
+		 ########################################################################-->
+		 <!-- Hands on-->
+				<section name ="hands_on_1">
+					<section>
+						<h3>Hands on</h3>
+					</section>
+					<section>
+						<ul style="font-size:30px">
+							<li>Goal is to build a dummy GUI within Mantid which covers</li>
+							<ul>
+								<li>Adding GUI to Mantid and setting up a skeleton</li>
+								<li>Define and hookup algorithms</li>
+								<li><strike>Write and test your presenters.</strike> (no time)</li>
+							</ul>
+							<li>At the moment there is no canonical way to setup a new GUI!</li>
+						</ul>
+					</section>
+					<section>
+						<h5>Create UI and register it</h5>
+							<ul style="font-size:30px">
+								<li>Create UI file in <i>scripts/Interface/ui/developer_workshop</i></li>
+								<li>Create CMakeLists.txt and add UI compilation. Add target info to CMakeLists.txt in the level above</li>
+								<li>Add startup script to <code>scripts</code> folder (<code>DeveloperWorkshop.py</code>)</li>
+								<li>Add it to the startup options via <code>Mantid.properties.template</code></li>
+							</ul>
+
+						<img src="bare_gui.png"  height="382" width="803">
+					</section>
+					<section>
+						<h5>Minimal setup of the DataProcessorWidget</h5>
+						<ul style="font-size:30px">
+							<li>Create whitelist</li>
+							<li>Provide a <i>DataProcessorPostprocessingAlgorithm</i></li>
+							<li>Provide a <i>DataProcessorProcessingAlgorithm</i></li>
+							<li>Provide a <i>DataProcessorMainPresenter</i></li>
+							<li>Create the <i>QDataProcessorWidget</i> and register the elements with it</li>
+							<li>Provide final wiring</li>
+						</ul>
+						<img src="developer_workshop_gui.png"  height="382" width="803">
+					</section>
+					<section>
+						<h5>Add more features</h5>
+						<ul style="font-size:30px">
+							<li>Add global properties</li>
+							<li>Add <i>DataProcessorPostprocessingAlgorithm</i></li>
+							<li>Add blacklist</li>
+						</ul>
+						<img src="developer_workshop_post_process_gui.png"  height="382" width="803">
+					</section>
+				</section>
+
+
+<!-- ###########################################################################
+		 ########################################################################-->
+				<!-- Extending functionality-->
+				<section name ="extending_functionality">
+					<section>
+						<h3>Extending the functionality</h3>
+					</section>
+					<section>
+						<ul style="font-size:30px">
+							<li>Basic functionality is there but most likely it will not be a 100% fit</li>
+							<li>Modifications need to be exposed via <i>manitdqt.sip</i></li>
+							<li>Has to be looked at on a case-by-case basis.
+								<ul>
+									<li>Modify and extend existing classes</li>
+									<li>Inherit from existing classes and specialize </li>
+								</ul>
+						</ul>
+					</section>
+					<section>
+						<h5>Hands on continued</h5>
+						<ul style="font-size:30px">
+							<li>Add <code>setCell</code> functionality which requires a change in:</li>
+							<ul>
+								<li><i>QDataProcessorWidget</i></li>
+								<li><i>DataProcessorPresenter</i></li>
+								<li><i>GenericDataProcessorPresenter</i></li>
+								<li><i>DataProcessorTreeManager</i></li>
+								<li><i>DataProcessorOneLevelTreeManager</i></li>
+								<li><i>DataProcessorTwoLevelTreeManager</i></li>
+							</ul>
+							<li>Finally add the export to <i>mantidqt.sip</i></li>
+						</ul>
+					</section>
+				</section>
+
+
+<!-- ###################################################################
+END OF SECTIONS
+##################################################################-->
+			</div>
+		</div>
+		<script src="lib/js/head.min.js"></script>
+		<script src="js/reveal.js"></script>
+		<script>
+
+			// Full list of configuration options available at:
+			// https://github.com/hakimel/reveal.js#configuration
+			Reveal.initialize({
+				controls: true,
+				progress: true,
+				history: true,
+				center: true,
+
+				transition: 'convex', // none/fade/slide/convex/concave/zoom
+
+				// Optional reveal.js plugins
+				dependencies: [
+					{ src: 'lib/js/classList.js', condition: function() { return !document.body.classList; } },
+					{ src: 'plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+					{ src: 'plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+					{ src: 'plugin/highlight/highlight.js', async: true, condition: function() { return !!document.querySelector( 'pre code' ); }, callback: function() { hljs.initHighlightingOnLoad(); } },
+					{ src: 'plugin/zoom-js/zoom.js', async: true },
+					{ src: 'plugin/notes/notes.js', async: true }
+				]
+			});
+
+		</script>
+
+	</body>
+</html>
