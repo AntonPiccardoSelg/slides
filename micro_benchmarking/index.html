@@ -40,8 +40,8 @@
 <!-- ###########################################################################
 		 ########################################################################-->
 				<section data-markdown>
-					##Micro-benchmarking in c++
-					#### 12/7/2017
+					##Micro-benchmarking with Google Benchmark
+					#### 14/7/2017
 					Anton Piccardo-Selg
 				</section>
 
@@ -50,7 +50,7 @@
 		 ########################################################################-->
 				<!-- What is micro-benchmarking? -->
 				<section>
-					<h3>What is micro-benchmarking?</h3>)
+					<h3>What is micro-benchmarking?</h3>
 					    <ul style="font-size:30px">
                             <li>Performance measurment of basic, isolated components.</li>
                             <li>Not a replacement for whole-system performance tests.</li>
@@ -63,67 +63,295 @@
 		 ########################################################################-->
 				<!-- Table of contents -->
 				<section>
-					<h3>Some libraries:</h3>
+					<h3>The options are:</h3>
 						<ul style="font-size:30px">
-							<li>google benchmark</li>
-							<li>Celero</li>
-							<li>Nonius</li>
-							<li>Hayai</li>
-                            <li>Bonus: quick-bench.com/</li>
+							<li><a href="https://github.com/google/benchmark">Google Benchmark</a></li>
+							<li><a href="https://github.com/DigitalInBlue/Celero">Celero</a></li>
+							<li><a href="https://github.com/rmartinho/nonius">Nonius</a></li>
+							<li><a href="https://github.com/nickbruun/hayai">Hayai</a></li>
+							<li>...</li>
 						</ul>
 				</section>
 
 
 <!-- ###########################################################################
 		 ########################################################################-->
-				<!-- Google Benchmark -->
-				<section>
-					<h3>Google Benchmark</h3>
-						<ul style="font-size:30px">
-							<li>Text</li>
-						</ul>
-				</section>
+			<!-- Google Benchmark -->
+			<section>
+				<h3>Google Benchmark</h3>
+					<ul style="font-size:30px">
+						<li>support for fixtures</li>
+						<li>arguments and ranges (scan of multi-dimensional configuration space)</li>
+						<li>support for csv and json output</li>
+						<li>templating</li>
+						<li>...</li>
+					</ul>
+			</section>
 
 <!-- ###########################################################################
 		 ########################################################################-->
-				<!-- Celero -->
+			<!-- Getting started -->
+			<section>
 				<section>
-					<h3>Celero</h3>
-						<ul style="font-size:30px">
-							<li>Text</li>
-						</ul>
+					<h3>Getting started</h3>
 				</section>
+				<section>
+					<ul style="font-size:30px">
+						<li>Easy option: <a href="https://pixorblog.wordpress.com/2016/05/22/cmake-google-micro-benchmarking/">cmake googlebenchmark skeleton project</a></li>
+						<li>or <ul>
+										<li>download, build <a href="https://github.com/google/benchmark">Google Benchmark</a></li>
+										<li>link target to <code>benchmark</code> library</li>
+									</ul>
+						</li>
+					</ul>
+				</section>
+			</section>
+
 
 <!-- ###########################################################################
 		 ########################################################################-->
-				<!-- Nonius -->
+			<!-- Simple test -->
+			<section>
 				<section>
-					<h3>Nonius</h3>
-						<ul style="font-size:30px">
-							<li>Text</li>
-						</ul>
+					<h3>Basic benchmark</h3>
 				</section>
+				<section>
+					<ol style="font-size:30px">
+						<li>Include
+<pre><code class="cpp" data-trim contenteditable style="width:110%; min-height:100px; margin-left:-5%">
+#include "benchmark/benchmark.h"
+// note that #include "benchmark/benchmark_api.h" has been deprecated
+</code></pre>
+						</li>
+						<li>Define benchmark
+<pre><code class="cpp" data-trim contenteditable style="width:110%; min-height:100px; margin-left:-5%">
+static void BM_Name(benchmark::State &state) {
+  ...
+  while (state.KeepRunning()) {
+    ...
+  }
+}
+</code></pre>
+						</li>
+						<li>Register benchmark and create main
+<pre><code class="cpp" data-trim contenteditable style="width:110%; min-height:100px; margin-left:-5%">
+BENCHMARK(BM_Name);
+
+BENCHMARK_MAIN();
+</code></pre>
+					 </li>
+					</ul>
+				</section>
+				<section>
+					<h5><code>benchmark::State</code></h5>
+					<ul style="font-size:30px">
+						<li>contains configuration for benchmark</li>
+						<li>accessible via <code>range(0)</code>, <code>range(1)</code>, ...</li>
+						<li>control of execution via <code>state.PauseTiming()</code> and <code>state.ResumeTiming()</code></li>
+						<li><code>state.KeepRunning()</code> repeats the measurement until CPU time > min time or 5x wallclock > min time or >1e9 iterations </li>
+					</ul>
+				</section>
+			</section>
+
 
 <!-- ###########################################################################
 		 ########################################################################-->
-				<!-- Hayai -->
+			<!-- Basic example -->
+			<section>
 				<section>
-					<h3>Hayai</h3>
-						<ul style="font-size:30px">
-							<li>Text</li>
-						</ul>
+					<h3>Basic example: Double to String</h3>
 				</section>
+				<section>
+<pre><code class="cpp" data-trim contenteditable style="width:120%; min-height:600px; margin-left:-5%; margin-top:-5%">
+#include "benchmark/benchmark.h"
+#include &ltstring&gt
+#include &ltsstream&gt
+#include &ltboost/lexical_cast.hpp&gt
+
+// -----------------------------------------------------------------
+// Example: String stream
+static void BM_DoubleToString_StringStream(benchmark::State &state) {
+  const double testDouble = 3.14;
+  while (state.KeepRunning()) {
+    std::ostringstream s;
+    s &lt&lt testDouble;
+    benchmark::DoNotOptimize(s.str());
+  }
+}
+
+BENCHMARK(BM_DoubleToString_StringStream);
+
+// -----------------------------------------------------------------
+// Example: c++11 standard function
+static void BM_DoubleToString_toString(benchmark::State &state) {
+  const double testDouble = 3.14;
+  while (state.KeepRunning()) {
+    benchmark::DoNotOptimize(std::to_string(testDouble));
+  }
+}
+
+BENCHMARK(BM_DoubleToString_toString);
+
+// -----------------------------------------------------------------
+// Example: lexical cast
+static void BM_DoubleToString_LexicalCast(benchmark::State &state) {
+  const double testDouble = 3.14;
+  while (state.KeepRunning()) {
+    benchmark::DoNotOptimize(boost::lexical_cast&lt std::string&gt(testDouble));
+  }
+}
+
+BENCHMARK(BM_DoubleToString_LexicalCast);
+
+BENCHMARK_MAIN();
+</code></pre>
+				</section>
+				<section>
+<pre><code class="c" data-trim contenteditable style="width:110%; min-height:100px; margin-left:-5%">
+	Run on (4 X 3500 MHz CPU s)
+2017-07-13 21:51:22
+----------------------------------------------------------------------
+Benchmark                               Time           CPU Iterations
+----------------------------------------------------------------------
+BM_DoubleToString_StringStream        613 ns        611 ns    1180866
+BM_DoubleToString_toString            192 ns        192 ns    3014335
+BM_DoubleToString_LexicalCast         699 ns        697 ns    1075350
+</code></pre>
+<ul>
+	<li>You might see:
+		<ul>
+			<li>
+				<i>***WARNING*** CPU scaling is enabled, the benchmark real time measurements may be noisy and will incur extra overhead</i>
+			</li>
+		</ul>Set the CPU governor to performance</li>
+</ul>
+				</section>
+			</section>
+
 
 <!-- ###########################################################################
 		 ########################################################################-->
-				<!-- Hayai -->
+			<!-- Benchmark fixture -->
+			<section>
 				<section>
-					<h3>Hayai</h3>
-						<ul style="font-size:30px">
-							<li>Text</li>
-						</ul>
+					<h3>Benchmark fixture</h3>
+				</section>
+				<section>
+<pre><code class="c" data-trim contenteditable style="width:130%; min-height:600px; margin-left:-15%">
+...
+// Create benchmark fixture
+struct SortFixture : public benchmark::Fixture {
+public:
+    void SetUp(benchmark::State& state) override {
+        m_randomContainer = createRandomContainer(state.range(0));
+    }
+
+    std::vector&ltint&gt getContainer() {
+        return m_randomContainer;
+    }
+
+private:
+    std::vector&ltint&gt m_randomContainer;
+};
+...
+// Standard sort
+BENCHMARK_DEFINE_F(SortFixture, BM_SortingWithStdSort) (benchmark::State& state) {
+    while (state.KeepRunning()) {
+        state.PauseTiming();
+        // Get a copy of the elements
+        auto randomNumbers = getContainer();
+        state.ResumeTiming();
+        std::sort(randomNumbers.begin(), randomNumbers.end());
+    }
+}
+
+BENCHMARK_REGISTER_F(SortFixture,
+                    BM_SortingWithStdSort)-&gtRange(1000,1000&lt&lt5)
+                                          -&gtUnit(benchmark::kMillisecond);
+...
+BENCHMARK_MAIN();
+</code></pre>
+				</section>
+				<section>
+<pre><code class="c" data-trim contenteditable style="width:130%; min-height:100px; margin-left:-20%">
+-------------------------------------------------------------------------------------
+Benchmark                                              Time           CPU Iterations
+-------------------------------------------------------------------------------------
+SortFixture/BM_SortingWithStdSort/1000                 0 ms          0 ms      25183
+SortFixture/BM_SortingWithStdSort/4096                 1 ms          1 ms       4494
+SortFixture/BM_SortingWithStdSort/32000                5 ms          5 ms        490
+SortFixture/BM_SortingWithInsertionSort/1000           1 ms          1 ms       2408
+SortFixture/BM_SortingWithInsertionSort/4096          19 ms         19 ms        138
+SortFixture/BM_SortingWithInsertionSort/32000       1119 ms       1119 ms          2
+</code></pre>
+				</section>
+</section>
+
+<!-- ###########################################################################
+		 ########################################################################-->
+			<!-- Benchmark templates -->
+			<section>
+				<section>
+					<h3>Templates</h3>
+				</section>
+				<section>
+<pre><code class="c" data-trim contenteditable style="width:130%; min-height:600px; margin-left:-15%">
+...
+template&lttypename T&gt
+void BM_accumulate(benchmark::State &state) {
+    const auto value = static_cast&ltT&gt(1);
+    std::vector&ltT&gt referenceContainer(state.range(0), value);
+
+    while (state.KeepRunning()) {
+        benchmark::DoNotOptimize(std::accumulate(referenceContainer.begin(),
+                                                 referenceContainer.end(),
+                                                 static_cast&ltT&gt(0)));
+    }
+}
+
+const int RANGE_START = 10;
+const int RANGE_STOP = 1&lt&lt17;
+
+BENCHMARK_TEMPLATE(BM_accumulate, int)-&gtRange(RANGE_START, RANGE_STOP);
+BENCHMARK_TEMPLATE(BM_accumulate, double)-&gtRange(RANGE_START, RANGE_STOP);
+
+BENCHMARK_MAIN();
+</code></pre>
 				</section>
 
+				<section>
+<pre><code class="c" data-trim contenteditable style="width:110%; min-height:100px; margin-left:-5%">
+Benchmark                             Time           CPU Iterations
+--------------------------------------------------------------------
+BM_accumulate&ltint&gt/10                 4 ns          4 ns  160287574
+BM_accumulate&ltint&gt/64                10 ns         10 ns   69727995
+BM_accumulate&ltint&gt/512               72 ns         72 ns    9094781
+BM_accumulate&ltint&gt/4096             563 ns        563 ns    1097076
+BM_accumulate&ltint&gt/32768           4477 ns       4477 ns     127072
+BM_accumulate&ltint&gt/131072         17735 ns      17735 ns      41001
+BM_accumulate&ltdouble&gt/10             13 ns         13 ns   52242550
+BM_accumulate&ltdouble&gt/64             78 ns         78 ns    8379099
+BM_accumulate&ltdouble&gt/512           622 ns        622 ns    1003548
+BM_accumulate&ltdouble&gt/4096         5007 ns       5006 ns     122330
+BM_accumulate&ltdouble&gt/32768        39087 ns      39087 ns      17503
+BM_accumulate&ltdouble&gt/131072     161785 ns     161785 ns       4406
+</code></pre>
+				</section>
+			</section>
+
+<!-- ###########################################################################
+		 ########################################################################-->
+			<!-- Quick bench -->
+			<section>
+					<h3><a href="http://quick-bench.com/">quick-bench.com</a></h3>
+			</section>
+
+<!-- ###########################################################################
+		 ########################################################################-->
+			<!-- Quick bench -->
+			<section>
+					<h3>End</h3>
+			</section>
 
 <!-- ###################################################################
 END OF SECTIONS
